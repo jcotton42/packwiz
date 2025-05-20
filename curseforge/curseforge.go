@@ -27,6 +27,9 @@ var curseforgeCmd = &cobra.Command{
 
 func init() {
 	cmd.Add(curseforgeCmd)
+	curseforgeCmd.PersistentFlags().String("cf-api-key", "", "The API key to use for the CurseForge API instead of the builtin default")
+	_ = viper.BindPFlag("curseforge.api-key", curseforgeCmd.Flags().Lookup("cf-api-key"))
+
 	core.Updaters["curseforge"] = cfUpdater{}
 	core.MetaDownloaders["curseforge"] = cfDownloader{}
 }

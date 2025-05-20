@@ -5,12 +5,14 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/packwiz/packwiz/core"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/packwiz/packwiz/core"
+	"github.com/spf13/viper"
 )
 
 const cfApiServer = "api.curseforge.com"
@@ -21,7 +23,16 @@ const cfApiKeyDefault = "JDJhJDEwJHNBWVhqblU1N0EzSmpzcmJYM3JVdk92UWk2NHBLS3BnQ2V
 // Exists so you can provide it as a build parameter: -ldflags="-X 'github.com/packwiz/packwiz/curseforge.cfApiKey=key'"
 var cfApiKey = ""
 
-func decodeDefaultKey() string {
+func getApiKey() string {
+	key := viper.GetString("curseforge.api-key")
+	if key != "" {
+		return key
+	}
+
+	if cfApiKey != "" {
+		return cfApiKey
+	}
+
 	k, err := base64.StdEncoding.DecodeString(cfApiKeyDefault)
 	if err != nil {
 		panic("failed to read API key!")
@@ -43,10 +54,7 @@ func (c *cfApiClient) makeGet(endpoint string) (*http.Response, error) {
 
 	req.Header.Set("User-Agent", core.UserAgent)
 	req.Header.Set("Accept", "application/json")
-	if cfApiKey == "" {
-		cfApiKey = decodeDefaultKey()
-	}
-	req.Header.Set("X-API-Key", cfApiKey)
+	req.Header.Set("X-API-Key", getApiKey())
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -68,10 +76,7 @@ func (c *cfApiClient) makePost(endpoint string, body io.Reader) (*http.Response,
 	req.Header.Set("User-Agent", core.UserAgent)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	if cfApiKey == "" {
-		cfApiKey = decodeDefaultKey()
-	}
-	req.Header.Set("X-API-Key", cfApiKey)
+	req.Header.Set("X-API-Key", getApiKey())
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
